@@ -154,7 +154,7 @@ is_ucase(str)
 clear_pattern(info)
 	struct pattern_info *info;
 {
-	fprintf(stderr, "pattern was cleared\n");
+	// fprintf(stderr, "pattern was cleared\n");
 	if (info->text != NULL)
 		free(info->text);
 	info->text = NULL;

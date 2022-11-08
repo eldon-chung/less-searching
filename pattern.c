@@ -29,6 +29,7 @@ compile_pattern2(pattern, search_type, comp_pattern, show_error)
 {
 	if (search_type & SRCH_NO_REGEX)
 	{	
+		// fprintf(stderr, "compiling bm for string %s", pattern);
 		ALLOC_NO_REGEX_PATTERN(&comp_pattern->no_regex, strlen(pattern));
 		COMPILE_NO_REGEX_PATTERN(&comp_pattern->no_regex, pattern, strlen(pattern));
 		return (0);
@@ -161,10 +162,11 @@ compile_pattern(pattern, search_type, show_error, comp_pattern)
 	char *cvt_pattern;
 	int result;
 
-	if (caseless != OPT_ONPLUS || re_handles_caseless)
+	if (caseless != OPT_ONPLUS || (re_handles_caseless && !(search_type & SRCH_NO_REGEX)))
 		cvt_pattern = pattern;
 	else
 	{
+		// fprintf(stderr, "cvt was called.\n");
 		cvt_pattern = (char*) ecalloc(1, cvt_length(strlen(pattern), CVT_TO_LC));
 		cvt_text(cvt_pattern, pattern, (int *)NULL, (int *)NULL, CVT_TO_LC);
 	}
@@ -182,7 +184,7 @@ public void
 uncompile_no_regex_pattern(pattern)
 	NO_REGEX_PATTERN_TYPE *pattern;
 {
-	fprintf(stderr, "freeing no regex pattern\n");
+	// fprintf(stderr, "freeing no regex pattern\n");
 	FREE_NO_REGEX_PATTERN(pattern);
 }
 
@@ -203,7 +205,7 @@ uncompile_pattern(pattern)
 	*pattern = NULL;
 #endif
 #if HAVE_POSIX_REGCOMP
-	fprintf(stderr, "freeing regex pattern\n");
+	// fprintf(stderr, "freeing regex pattern\n");
 	if (*pattern != NULL)
 	{
 		regfree(*pattern);
@@ -315,11 +317,23 @@ int boyermoore_match(bm_compiled, pattern, pattern_len, buf, buf_len, pfound, pe
         char cp = *pp;
         char cl = *lp;
 
+        // if (caseless == OPT_ONPLUS && ASCII_IS_UPPER(cl))
+		// {
+		// 	fprintf(stderr, "case conversion was called on cl: %c\n", cl);
+		// 	cl = ASCII_TO_LOWER(cl);
+		// }
+
+		
         if (caseless == OPT_ONPLUS && ASCII_IS_UPPER(cp))
 		{
-            cp = ASCII_TO_LOWER(cp);
-			cl = ASCII_TO_LOWER(cl);
+		// 	fprintf(stderr, "shouldnt be called conversion was called on cp: %c\n", cp);
+			cp = ASCII_TO_LOWER(cp);
 		}
+
+		// if(ASCII_IS_UPPER(cl))
+		// {
+		// 	fprintf(stderr, "somehow cl is upper: %c\n", cl);
+		// }
 
         if(cp == cl)
         {
