@@ -100,6 +100,12 @@ static struct pattern_info *filter_infos = NULL;
 
 #endif
 
+// bit of a hack to make sure we call the correct free
+enum compiled_type {
+	REGEX,
+	NO_REGEX,
+};
+
 /*
  * These are the static variables that represent the "remembered"
  * search pattern and filter pattern.
@@ -108,6 +114,7 @@ struct pattern_info {
 	union compiled_pattern compiled;
 	char* text;
 	int search_type;
+	enum compiled_type comp_type; // 0 for regex 
 	struct pattern_info *next;
 };
 
@@ -147,6 +154,7 @@ is_ucase(str)
 clear_pattern(info)
 	struct pattern_info *info;
 {
+	fprintf(stderr, "pattern was cleared\n");
 	if (info->text != NULL)
 		free(info->text);
 	info->text = NULL;
@@ -174,6 +182,16 @@ set_pattern(info, pattern, search_type, show_error)
 	 */
 	is_ucase_pattern = (pattern == NULL) ? FALSE : is_ucase(pattern);
 	is_caseless = (is_ucase_pattern && caseless != OPT_ONPLUS) ? 0 : caseless;
+	
+	// little bit hacky but we "eagerly" free up the non regex pattern here if need be
+	// since we know whether what type of pattern it is
+	if(info->comp_type == NO_REGEX)
+	{
+		FREE_NO_REGEX_PATTERN(&info->compiled.no_regex);
+	}
+
+	info->comp_type = (search_type & SRCH_NO_REGEX) ? NO_REGEX : REGEX;
+
 #if !NO_REGEX
 	if (pattern == NULL)
 		SET_NULL_PATTERN(info->compiled.regex);
@@ -204,6 +222,7 @@ init_pattern(info)
 	info->text = NULL;
 	info->search_type = 0;
 	info->next = NULL;
+	info->comp_type = REGEX;
 }
 
 /*

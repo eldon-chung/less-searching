@@ -85,6 +85,7 @@ extern int reg_show_error;
 #define FREE_NO_REGEX_PATTERN(name) free_boyermoore_tables(name)
 #define COMPILE_NO_REGEX_PATTERN(pcompiled, pattern, pattern_len) compile_bm_pattern(pcompiled, pattern, pattern_len)
 #define ALLOC_NO_REGEX_PATTERN(pcompiled, pattern_len) alloc_boyermoore_tables(pcompiled, pattern_len)
+#define IS_NULL_NO_REGEX_PATTERN(name) ((name).bc_table == NULL && (name).gs_table == NULL)
 
 union compiled_pattern {
     PATTERN_TYPE regex;

@@ -14,9 +14,11 @@ void alloc_boyermoore_tables(pcompiled, pattern_len)
 void free_boyermoore_tables(pcompiled)
     struct boyermoore_tables* pcompiled;
 {
-    free(pcompiled->bc_table);
+    if(pcompiled->bc_table != NULL)
+        free(pcompiled->bc_table);
     pcompiled->bc_table = NULL;
-    free(pcompiled->gs_table);
+    if(pcompiled->gs_table != NULL)
+        free(pcompiled->gs_table);
     pcompiled->gs_table = NULL;
 }
 

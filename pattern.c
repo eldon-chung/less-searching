@@ -182,6 +182,7 @@ public void
 uncompile_no_regex_pattern(pattern)
 	NO_REGEX_PATTERN_TYPE *pattern;
 {
+	fprintf(stderr, "freeing no regex pattern\n");
 	FREE_NO_REGEX_PATTERN(pattern);
 }
 
@@ -192,6 +193,7 @@ uncompile_no_regex_pattern(pattern)
 uncompile_pattern(pattern)
 	PATTERN_TYPE *pattern;
 {
+
 #if HAVE_GNU_REGEX
 	if (*pattern != NULL)
 	{
@@ -201,6 +203,7 @@ uncompile_pattern(pattern)
 	*pattern = NULL;
 #endif
 #if HAVE_POSIX_REGCOMP
+	fprintf(stderr, "freeing regex pattern\n");
 	if (*pattern != NULL)
 	{
 		regfree(*pattern);
@@ -291,7 +294,7 @@ is_null_pattern(pattern)
  * simple matching function.
  */
 int boyermoore_match(bm_compiled, pattern, pattern_len, buf, buf_len, pfound, pend)
-    struct boyermoore_tables* bm_compiled;
+	NO_REGEX_PATTERN_TYPE bm_compiled;
     char* pattern;
     int pattern_len;
     char* buf;
@@ -313,7 +316,10 @@ int boyermoore_match(bm_compiled, pattern, pattern_len, buf, buf_len, pfound, pe
         char cl = *lp;
 
         if (caseless == OPT_ONPLUS && ASCII_IS_UPPER(cp))
+		{
             cp = ASCII_TO_LOWER(cp);
+			cl = ASCII_TO_LOWER(cl);
+		}
 
         if(cp == cl)
         {
@@ -335,7 +341,7 @@ int boyermoore_match(bm_compiled, pattern, pattern_len, buf, buf_len, pfound, pe
 
             // get max of both shifts
 			
-            int shift = MAX_BM_SHIFT(pattern_idx - bm_compiled->bc_table[cl], bm_compiled->gs_table[pattern_idx + 1]);
+            int shift = MAX_BM_SHIFT(pattern_idx - bm_compiled.bc_table[cl], bm_compiled.gs_table[pattern_idx + 1]);
             
             // I don't think you need this.
             shift = MAX_BM_SHIFT(shift, 1);
