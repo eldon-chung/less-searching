@@ -1,7 +1,7 @@
 Just a personal project where I try to implement Boyer-Moore with the bad character and good suffix rule off of a clone of the less source code. 
 
 Disclaimer: As this is a personal project don't expect this to be anywhere near the actual official release nor source. This version is not intended
-for any form of distribution. 
+for any form of distribution. All rights belong to their respect owners and I really don't own anything here.
 
 I've also included a really basic set of instructions on how to get my version to build (which is mostly based off the original instructions with an addditional step).
 (Only with Works-On-My-Machine certification)
