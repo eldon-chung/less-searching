@@ -29,3 +29,5 @@ INSTALLATION (Unix & Linux systems only):
    "lesskey" and "lessecho" in your current directory.  Have fun playing with the search feature on "less".
 =======================================================================
 
+TODO:
+1. Gotta add some benchmarks. Maybe run perf. Compare against both their regex as well as their brute force algorithm.
