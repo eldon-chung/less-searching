@@ -78,3 +78,7 @@ extern int reg_show_error;
 #ifndef re_handles_caseless
 #define re_handles_caseless      FALSE
 #endif
+
+union compiled_pattern {
+    PATTERN_TYPE regex;
+};

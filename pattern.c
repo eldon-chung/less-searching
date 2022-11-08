@@ -24,7 +24,7 @@ extern int utf_mode;
 compile_pattern2(pattern, search_type, comp_pattern, show_error)
 	char *pattern;
 	int search_type;
-	PATTERN_TYPE *comp_pattern;
+	union compiled_pattern *comp_pattern;
 	int show_error;
 {
 	if (search_type & SRCH_NO_REGEX)
@@ -57,12 +57,12 @@ compile_pattern2(pattern, search_type, comp_pattern, show_error)
 			error("Invalid pattern", NULL_PARG);
 		return (-1);
 	}
-	if (*comp_pattern != NULL)
+	if (comp_pattern->regex != NULL)
 	{
-		regfree(*comp_pattern);
-		free(*comp_pattern);
+		regfree(comp_pattern->regex);
+		free(comp_pattern->regex);
 	}
-	*comp_pattern = comp;
+	comp_pattern->regex = comp;
 #endif
 #if HAVE_PCRE
 	constant char *errstring;
@@ -152,7 +152,7 @@ compile_pattern(pattern, search_type, show_error, comp_pattern)
 	char *pattern;
 	int search_type;
 	int show_error;
-	PATTERN_TYPE *comp_pattern;
+	union compiled_pattern *comp_pattern;
 {
 	char *cvt_pattern;
 	int result;
@@ -318,7 +318,7 @@ match(pattern, pattern_len, buf, buf_len, pfound, pend)
  */
 	public int
 match_pattern(pattern, tpattern, line, line_len, sp, ep, notbol, search_type)
-	PATTERN_TYPE pattern;
+	union compiled_pattern pattern;
 	char *tpattern;
 	char *line;
 	int line_len;
@@ -359,7 +359,7 @@ match_pattern(pattern, tpattern, line, line_len, sp, ep, notbol, search_type)
 		rm.rm_so = 0;
 		rm.rm_eo = line_len;
 #endif
-		matched = !regexec(pattern, line, 1, &rm, flags);
+		matched = !regexec(pattern.regex, line, 1, &rm, flags);
 		if (matched)
 		{
 #ifndef __WATCOMC__
@@ -376,7 +376,7 @@ match_pattern(pattern, tpattern, line, line_len, sp, ep, notbol, search_type)
 	{
 		int flags = (notbol) ? PCRE_NOTBOL : 0;
 		int ovector[3];
-		matched = pcre_exec(pattern, NULL, line, line_len,
+		matched = pcre_exec(pattern.regex, NULL, line, line_len,
 			0, flags, ovector, 3) >= 0;
 		if (matched)
 		{
@@ -389,7 +389,7 @@ match_pattern(pattern, tpattern, line, line_len, sp, ep, notbol, search_type)
 	{
 		int flags = (notbol) ? PCRE2_NOTBOL : 0;
 		pcre2_match_data *md = pcre2_match_data_create(3, NULL);
-		matched = pcre2_match(pattern, (PCRE2_SPTR)line, line_len,
+		matched = pcre2_match(pattern.regex, (PCRE2_SPTR)line, line_len,
 			0, flags, md, NULL) >= 0;
 		if (matched)
 		{
@@ -415,9 +415,9 @@ match_pattern(pattern, tpattern, line, line_len, sp, ep, notbol, search_type)
 #endif
 #if HAVE_V8_REGCOMP
 #if HAVE_REGEXEC2
-	matched = regexec2(pattern, line, notbol);
+	matched = regexec2(pattern.regex, line, notbol);
 #else
-	matched = regexec(pattern, line);
+	matched = regexec(pattern.regex, line);
 #endif
 	if (matched)
 	{

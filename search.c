@@ -105,7 +105,7 @@ static struct pattern_info *filter_infos = NULL;
  * search pattern and filter pattern.
  */
 struct pattern_info {
-	PATTERN_TYPE compiled;
+	union compiled_pattern compiled;
 	char* text;
 	int search_type;
 	struct pattern_info *next;
@@ -151,7 +151,8 @@ clear_pattern(info)
 		free(info->text);
 	info->text = NULL;
 #if !NO_REGEX
-	uncompile_pattern(&info->compiled);
+	if((info->search_type & SRCH_NO_REGEX) == 0)
+		uncompile_pattern(&info->compiled.regex);
 #endif
 }
 
@@ -173,8 +174,8 @@ set_pattern(info, pattern, search_type, show_error)
 	is_caseless = (is_ucase_pattern && caseless != OPT_ONPLUS) ? 0 : caseless;
 #if !NO_REGEX
 	if (pattern == NULL)
-		SET_NULL_PATTERN(info->compiled);
-	else if (compile_pattern(pattern, search_type, show_error, &info->compiled) < 0)
+		SET_NULL_PATTERN(info->compiled.regex);
+	else if (compile_pattern(pattern, search_type, show_error, &(info->compiled)) < 0)
 		return -1;
 #endif
 	/* Pattern compiled successfully; save the text too. */
@@ -197,7 +198,7 @@ set_pattern(info, pattern, search_type, show_error)
 init_pattern(info)
 	struct pattern_info *info;
 {
-	SET_NULL_PATTERN(info->compiled);
+	SET_NULL_PATTERN(info->compiled.regex);
 	info->text = NULL;
 	info->search_type = 0;
 	info->next = NULL;
@@ -240,7 +241,7 @@ prev_pattern(info)
 {
 #if !NO_REGEX
 	if ((info->search_type & SRCH_NO_REGEX) == 0)
-		return (!is_null_pattern(info->compiled));
+		return (!is_null_pattern(info->compiled.regex));
 #endif
 	return (info->text != NULL);
 }
