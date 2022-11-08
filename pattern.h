@@ -79,6 +79,14 @@ extern int reg_show_error;
 #define re_handles_caseless      FALSE
 #endif
 
+
+#include "boyermoore.h"
+#define NO_REGEX_PATTERN_TYPE struct boyermoore_tables
+#define FREE_NO_REGEX_PATTERN(name) free_boyermoore_tables(name)
+#define COMPILE_NO_REGEX_PATTERN(pcompiled, pattern, pattern_len) compile_bm_pattern(pcompiled, pattern, pattern_len)
+#define ALLOC_NO_REGEX_PATTERN(pcompiled, pattern_len) alloc_boyermoore_tables(pcompiled, pattern_len)
+
 union compiled_pattern {
     PATTERN_TYPE regex;
+    NO_REGEX_PATTERN_TYPE no_regex;
 };

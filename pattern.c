@@ -28,7 +28,11 @@ compile_pattern2(pattern, search_type, comp_pattern, show_error)
 	int show_error;
 {
 	if (search_type & SRCH_NO_REGEX)
+	{	
+		ALLOC_NO_REGEX_PATTERN(&comp_pattern->no_regex, strlen(pattern));
+		COMPILE_NO_REGEX_PATTERN(&comp_pattern->no_regex, pattern, strlen(pattern));
 		return (0);
+	}
   {
 #if HAVE_GNU_REGEX
 	struct re_pattern_buffer *comp = (struct re_pattern_buffer *)
@@ -170,6 +174,17 @@ compile_pattern(pattern, search_type, show_error, comp_pattern)
 	return (result);
 }
 
+
+/*
+ * Forget that we boyer-moore compiled pattern.
+ */
+public void
+uncompile_no_regex_pattern(pattern)
+	NO_REGEX_PATTERN_TYPE *pattern;
+{
+	FREE_NO_REGEX_PATTERN(pattern);
+}
+
 /*
  * Forget that we have a compiled pattern.
  */
@@ -272,6 +287,71 @@ is_null_pattern(pattern)
 }
 
 /*
+ * Boyer-moore searching algorithm meant to replace the 
+ * simple matching function.
+ */
+int boyermoore_match(bm_compiled, pattern, pattern_len, buf, buf_len, pfound, pend)
+    struct boyermoore_tables* bm_compiled;
+    char* pattern;
+    int pattern_len;
+    char* buf;
+    int buf_len;
+    char **pfound;
+    char **pend;
+{
+    char *buf_end = buf + buf_len;
+    char *pattern_end = pattern + pattern_len;
+
+    // we start matching from the end of the pattern
+    char *lp = buf + pattern_len - 1;
+    char *pp = pattern + pattern_len - 1;
+
+    for( ; buf + pattern_len <= buf_end ; )
+    {
+        // get the chars to match, converting for case insensitivity if needed
+        char cp = *pp;
+        char cl = *lp;
+
+        if (caseless == OPT_ONPLUS && ASCII_IS_UPPER(cp))
+            cp = ASCII_TO_LOWER(cp);
+
+        if(cp == cl)
+        {
+            pp--;
+            lp--;
+
+            if(pp <= pattern - 1)
+            {
+                if (pfound != NULL)
+				    *pfound = buf;
+			    if (pend != NULL)
+				    *pend = buf + pattern_len;
+			    return (1);
+            }
+        } else 
+        {
+            // shift our alignment forward based on both rules
+            int pattern_idx = pp - pattern;
+
+            // get max of both shifts
+			
+            int shift = MAX_BM_SHIFT(pattern_idx - bm_compiled->bc_table[cl], bm_compiled->gs_table[pattern_idx + 1]);
+            
+            // I don't think you need this.
+            shift = MAX_BM_SHIFT(shift, 1);
+
+            // shift the alignment by that amount
+            buf += shift;
+
+            // reset pp and lp
+            pp = pattern + pattern_len - 1;
+            lp = buf + pattern_len - 1;
+        }
+    }
+    return (0);
+}
+
+/*
  * Simple pattern matching function.
  * It supports no metacharacters like *, etc.
  */
@@ -334,7 +414,8 @@ match_pattern(pattern, tpattern, line, line_len, sp, ep, notbol, search_type)
 	search_type |= SRCH_NO_REGEX;
 #endif
 	if (search_type & SRCH_NO_REGEX)
-		matched = match(tpattern, strlen(tpattern), line, line_len, sp, ep);
+		// matched = match(tpattern, strlen(tpattern), line, line_len, sp, ep);
+		matched = boyermoore_match(pattern.no_regex, tpattern, strlen(tpattern), line, line_len, sp, ep);
 	else
 	{
 #if HAVE_GNU_REGEX

@@ -153,6 +153,8 @@ clear_pattern(info)
 #if !NO_REGEX
 	if((info->search_type & SRCH_NO_REGEX) == 0)
 		uncompile_pattern(&info->compiled.regex);
+	else
+		uncompile_no_regex_pattern(&info->compiled.no_regex);
 #endif
 }
 
